@@ -31,16 +31,26 @@
 
     let engine = ThreeEngine.new_default_3d();
 
-    let gui = get_default_lil_gui();
     let settings = {
-        x: 1,
-        time: "Time Elapsed: x",
+        time_string: 1.0
+    }
+
+    let actions = {
+        reset_matrix: function() {
+            settings.theta=0;
+            refresh_displays(gui);
+        }
     };
 
-    gui.add(settings, "x", -2.0, 2.0).name("x position");
-    // gui.add(settings, "time", "Hello");
-    gui.addTextTrack("descriptions", "Hello World", "hi");
-    engine.animation_loop(() => {
+    let gui = get_default_lil_gui();
+    gui.add(settings, 'time_string').name('Time Elapsed:').disable();
+
+    let i = 0;
+
+    engine.animation_loop(function() {
+        let time = engine.get_time_elapsed();
+        settings.time_string = time.toString();
+        refresh_displays(gui);
     });
 
 </script>
