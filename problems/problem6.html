@@ -21,12 +21,122 @@
 </head>
 <body>
 <script type="module">
-    import {ThreeEngine} from "../js/utils/utils_three.js";
+    import { ThreeEngine, get_default_lil_gui } from "../../js/utils/utils_three.js";
+    import {mul_matrix_matrix} from "../../js/utils/utils_math.js";
+    import {refresh_displays} from "../../js/utils/utils_three.js";
 
     // todo: recreate this visualization, demonstrating your understanding of displacement-based distance in SE(2)
     // todo: https://yale-cpsc-487-587-internal-djrakita-c95fa6c3239a481a48d29a6b0fd.gitlab.io/html/visualizations/SE2_distance2.html
     // todo: make sure you are using the displacement-based distance!
     // todo: or, feel free to come up with any create visualization here that demonstrates your understanding of SE(2) distance
+
+
+    let engine = ThreeEngine.new_default_2d();
+
+    let settings = {
+        theta1: 0,
+        x1: 0,
+        y1: 0,
+        theta2: 0,
+        x2: 0,
+        y2: 0,
+        distance: 0.0
+    }
+
+    let actions = {
+        reset1: function() {
+            settings.x1=0;
+            settings.y1=0;
+            settings.theta1=0;
+            refresh_displays(gui);
+        },
+        reset2: function() {
+            settings.x2=0;
+            settings.y2=0;
+            settings.theta2=0;
+            refresh_displays(gui);
+        }
+    };
+
+    function SE3(x, y, theta) {
+        let cos = Math.cos(theta);
+        let sin = Math.sin(theta);
+        return  [[cos, -sin, x],
+            [sin,  cos, y],
+            [0, 0, 1]];
+    }
+
+    function SE3_INV(x, y, theta) {
+        let cos = Math.cos(theta);
+        let sin = Math.sin(theta);
+        let tx = cos * -x + sin * -y;
+        let ty = -sin * -x + cos * -y;
+        return  [[cos, sin, tx],
+            [-sin,  cos, ty],
+            [0, 0, 1]];
+    }
+
+    function logmap(m) {
+        let a1 = Math.atan2(m[1][0], m[0][0]);
+        let p = 0;
+        let q = 0;
+        if (Math.abs(a1) < 0.0001) {
+            p = 1 - a1**2/6+a1**4/120;
+            q = a1/2-a1**3/24+a1**5/720;
+        } else {
+            p = Math.sin(a1) / a1;
+            q = (1-Math.cos(a1)) / a1;
+        }
+        let scaler = 1/(p**2+q**2);
+        let a2 = scaler * (p*m[0][2]+q*m[1][2]);
+        let a3 = scaler * (-q*m[0][2]+p*m[1][2]);
+        return [a1, a2, a3];
+    }
+
+    let gui = get_default_lil_gui();
+
+    gui.add(settings, 'theta1', -Math.PI, Math.PI).name("Theta1");
+    gui.add(settings, 'x1', -2.0, 2.0).name("tx1");
+    gui.add(settings, 'y1', -2.0, 2.0).name("ty1");
+    gui.add(actions, 'reset1').name('Reset 1');
+    gui.add(settings, 'theta2', -Math.PI, Math.PI).name("Theta2");
+    gui.add(settings, 'x2', -2.0, 2.0).name("tx2");
+    gui.add(settings, 'y2', -2.0, 2.0).name("ty2");
+    gui.add(actions, 'reset2').name('Reset 2');
+    gui.add(settings, 'distance').name('disp based dis').disable();
+
+
+    engine.animation_loop(function() {
+        let sin1 = Math.sin(settings.theta1);
+        let sin2 = Math.sin(settings.theta2);
+        let cos1 = Math.cos(settings.theta1);
+        let cos2 = Math.cos(settings.theta2);
+
+
+        let m1_inv = SE3_INV(settings.x1, settings.y1, settings.theta1);
+        let m1 = SE3(settings.x1, settings.y1, settings.theta1);
+        let m2 = SE3(settings.x2, settings.y2, settings.theta2);
+        let dist = mul_matrix_matrix(m1_inv, m2);
+        let logdist = logmap(dist);
+
+        settings.distance = Math.sqrt(logdist[0]**2+logdist[1]**2+logdist[2]**2);
+        refresh_displays(gui);
+
+        let o1 = [m1[0][2], m1[1][2]];
+        let x1 = [m1[0][0]+m1[0][2], m1[1][0]+m1[1][2]];
+        let y1 = [m1[0][1]+m1[0][2], m1[1][1]+m1[1][2]];
+        let o2 = [m2[0][2], m2[1][2]];
+        let x2 = [m2[0][0]+m2[0][2], m2[1][0]+m2[1][2]];
+        let y2 = [m2[0][1]+m2[0][2], m2[1][1]+m2[1][2]];
+
+        engine.draw_debug_vector(o1, x1, 0.035, undefined, 0xff3333);
+        engine.draw_debug_vector(o1, y1, 0.035, undefined, 0x33ff33);
+
+        engine.draw_debug_vector(o2, x2, 0.035, undefined, 0xaa2222);
+        engine.draw_debug_vector(o2, y2, 0.035, undefined, 0x22aa22);
+    });
+
+
 
 </script>
 </body>
