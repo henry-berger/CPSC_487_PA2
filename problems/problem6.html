@@ -95,11 +95,11 @@
 
     let gui = get_default_lil_gui();
 
-    gui.add(settings, 'theta1', -Math.PI, Math.PI).name("Theta1");
+    gui.add(settings, 'theta1', -2*Math.PI, 2*Math.PI).name("Theta1");
     gui.add(settings, 'x1', -2.0, 2.0).name("tx1");
     gui.add(settings, 'y1', -2.0, 2.0).name("ty1");
     gui.add(actions, 'reset1').name('Reset 1');
-    gui.add(settings, 'theta2', -Math.PI, Math.PI).name("Theta2");
+    gui.add(settings, 'theta2', -2*Math.PI, 2*Math.PI).name("Theta2");
     gui.add(settings, 'x2', -2.0, 2.0).name("tx2");
     gui.add(settings, 'y2', -2.0, 2.0).name("ty2");
     gui.add(actions, 'reset2').name('Reset 2');
